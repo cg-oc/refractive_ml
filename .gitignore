@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Optuna .db files
+optuna_files
+
+# Test ground directory
+test
