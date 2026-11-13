@@ -251,7 +251,7 @@ def otimiza_hiper(pipeline, X, y, grupos, nome_estudo, num_trials=100):
     """
     
     # cria pasta para arquivos .db do optuna caso ela não exista ainda
-    os.makedirs("optuna_files", exist_ok=True)
+    os.makedirs("optuna_files2", exist_ok=True)
 
     NUM_TRIALS_AQUECIMENTO = 5
     NUM_PASSOS_AQUECIMENTO = 3
@@ -265,7 +265,7 @@ def otimiza_hiper(pipeline, X, y, grupos, nome_estudo, num_trials=100):
     estudo = optuna.create_study(
         direction="minimize",
         study_name=nome_estudo,
-        storage=f"sqlite:///optuna_files/{nome_estudo}.db",
+        storage=f"sqlite:///optuna_files2/{nome_estudo}.db",
         load_if_exists=True,
         sampler=TPESampler(),
         pruner=PODADOR,
@@ -305,7 +305,7 @@ def instancia_pipe_lasso(trial):
 def instancia_pipe_elasticnet(trial):
     parametros = {
         # espaço de busca
-        "alpha": trial.suggest_float("alpha", 1e-3, 1_000, log=True),
+        "alpha": trial.suggest_float("alpha", 1e-5, 100, log=True),
         "l1_ratio": trial.suggest_float("l1_ratio", 0, 1),
         # argumento fixo
         "max_iter": 10_000
@@ -372,9 +372,9 @@ def formata_tempo(segundos):
         return f"{segs:.2f}s"
 
 pipe_modelos = (
-    instancia_pipe_ridge, instancia_pipe_lasso, 
-    instancia_pipe_elasticnet, instancia_pipe_floresta_aleatoria,
-    instancia_pipe_svr, instancia_pipe_krr
+   instancia_pipe_ridge, instancia_pipe_lasso, 
+   instancia_pipe_elasticnet, instancia_pipe_floresta_aleatoria,
+   instancia_pipe_svr, instancia_pipe_krr
 )
 
 nome_modelos = ("ridge", "lasso", "elasticnet", "floresta_aleatoria", "svr", "krr")
