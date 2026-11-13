@@ -10,8 +10,7 @@ from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import root_mean_squared_error
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupShuffleSplit, GroupKFold
 from sklearn.base import clone
 from optuna.samplers import TPESampler
 from functools import partial
@@ -86,6 +85,70 @@ for idx_treino, idx_teste in gss.split(X, y, groups=grupos):
     
     # Evita data leakage ao dividir pela formula das obs. de treino
     grupos_treino = grupos.iloc[idx_treino]
+import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class FiltroNZV(BaseEstimator, TransformerMixin):
+    """
+    Filtro de preditores com variância quase nula (Near-Zero Variance).
+    Baseado em Kuhn & Johnson (2013), Applied Predictive Modeling.
+    """
+    def __init__(self, freq_cut=20.0, unique_cut=0.10):
+        self.freq_cut = freq_cut
+        self.unique_cut = unique_cut
+
+    def fit(self, X, y=None):
+        # Converte para DataFrame temporariamente para facilitar os cálculos,
+        # garantindo compatibilidade mesmo se o Pipeline passar um array NumPy.
+        df = pd.DataFrame(X)
+        n_amostras = len(df)
+        
+        mascara = []
+        
+        for col in df.columns:
+            # Conta a frequência dos valores (ignorando NaNs)
+            contagens = df[col].value_counts(dropna=True)
+            n_unicos = len(contagens)
+            
+            # 1. Critério de Variância Zero (constante ou totalmente vazia)
+            if n_unicos <= 1:
+                mascara.append(False)  # Falso = Descartes a coluna
+                continue
+                
+            # 2. Critério de Variância Quase Nula (NZV)
+            pct_unicos = n_unicos / n_amostras
+            razao_freq = contagens.iloc[0] / contagens.iloc[1]
+            
+            # Se atender aos DOIS critérios de Kuhn & Johnson, é NZV
+            is_nzv = (pct_unicos <= self.unique_cut) and (razao_freq >= self.freq_cut)
+            
+            # Guardamos True para manter a coluna, False para descartar
+            mascara.append(not is_nzv)
+            
+        # Salva a máscara de colunas aprovadas no estado do objeto
+        self.mascara_manter_ = np.array(mascara)
+        return self
+
+    def transform(self, X):
+        # Verifica se o fit já foi chamado
+        if not hasattr(self, "mascara_manter_"):
+            raise RuntimeError("O transformador precisa ser ajustado (fit) antes do transform.")
+        
+        # Se for DataFrame, usa .loc para fatiar e manter os nomes das colunas
+        if isinstance(X, pd.DataFrame):
+            return X.loc[:, self.mascara_manter_]
+        
+        # Se o scikit-learn já tiver convertido para NumPy array, fatia diretamente
+        return X[:, self.mascara_manter_]
+
+    def get_feature_names_out(self, input_features=None):
+        # Método utilitário para você conseguir recuperar os nomes das colunas 
+        # que sobreviveram ao filtro depois que o Pipeline rodar.
+        if input_features is None:
+            return None
+        return np.array(input_features)[self.mascara_manter_]
+
 
 def instancia_pipeline(trial, algoritmo, parametros):
 
@@ -116,7 +179,7 @@ def instancia_pipeline(trial, algoritmo, parametros):
     """
 
     # Define etapas fudnamentais do pipeline
-    etapas_pipe = [preprocessor, VarianceThreshold(threshold=0)]
+    etapas_pipe = [preprocessor, FiltroNZV(freq_cut=20.0, unique_cut=0.10)]
 
     #  Adiciona StandardScaler ao pipeline caso optuna escolha usá-lo
     usa_padronizador = trial.suggest_categorical('usar_padronizador', [True, False])
@@ -373,11 +436,11 @@ def formata_tempo(segundos):
 
 pipe_modelos = (
    instancia_pipe_ridge, instancia_pipe_lasso, 
-   instancia_pipe_elasticnet, instancia_pipe_floresta_aleatoria,
+   instancia_pipe_elasticnet,
    instancia_pipe_svr, instancia_pipe_krr
 )
 
-nome_modelos = ("ridge", "lasso", "elasticnet", "floresta_aleatoria", "svr", "krr")
+nome_modelos = ("ridge", "lasso", "elasticnet", "svr", "krr")
 
 estudos = {nome: 0 for nome in nome_modelos}
 NUM_TRIALS = 1_000
