@@ -314,7 +314,7 @@ def otimiza_hiper(pipeline, X, y, grupos, nome_estudo, num_trials=100):
     """
     
     # cria pasta para arquivos .db do optuna caso ela não exista ainda
-    os.makedirs("optuna_files2", exist_ok=True)
+    os.makedirs("optuna_files3", exist_ok=True)
 
     NUM_TRIALS_AQUECIMENTO = 5
     NUM_PASSOS_AQUECIMENTO = 3
@@ -328,7 +328,7 @@ def otimiza_hiper(pipeline, X, y, grupos, nome_estudo, num_trials=100):
     estudo = optuna.create_study(
         direction="minimize",
         study_name=nome_estudo,
-        storage=f"sqlite:///optuna_files2/{nome_estudo}.db",
+        storage=f"sqlite:///optuna_files3/{nome_estudo}.db",
         load_if_exists=True,
         sampler=TPESampler(),
         pruner=PODADOR,
@@ -376,23 +376,6 @@ def instancia_pipe_elasticnet(trial):
 
     return instancia_pipeline(trial, ElasticNet, parametros)
 
-def instancia_pipe_floresta_aleatoria(trial):
-
-    parametros = {
-        # espaço de busca
-        "n_estimators": trial.suggest_int("num_arvores", 5, 300, log=True),
-        "criterion": trial.suggest_categorical("critério", ["squared_error", "absolute_error", "poisson"]),
-        "min_samples_split": trial.suggest_int("min_exemplos_split", 2, 20),
-        "min_samples_leaf": trial.suggest_int("min_exemplos_folha", 1, 20),
-        "max_features": trial.suggest_float("num_max_atributos", 0.1, 1),
-        # argumentos fixos
-        "n_jobs": -1,
-        "bootstrap": True,
-        "random_state": SEMENTE_ALEATORIA,
-    }
-
-    return instancia_pipeline(trial, RandomForestRegressor, parametros)
-
 def instancia_pipe_svr(trial):
 
   parametros = {
@@ -435,12 +418,12 @@ def formata_tempo(segundos):
         return f"{segs:.2f}s"
 
 pipe_modelos = (
-   instancia_pipe_ridge, instancia_pipe_lasso, 
-   instancia_pipe_elasticnet,
-   instancia_pipe_svr, instancia_pipe_krr
+   instancia_pipe_lasso, instancia_pipe_elasticnet,
+   instancia_pipe_svr, instancia_pipe_krr, 
+   instancia_pipe_ridge
 )
 
-nome_modelos = ("ridge", "lasso", "elasticnet", "svr", "krr")
+nome_modelos = ("lasso", "elasticnet", "svr", "krr", "ridge")
 
 estudos = {nome: 0 for nome in nome_modelos}
 NUM_TRIALS = 1_000
