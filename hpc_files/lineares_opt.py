@@ -328,7 +328,7 @@ def otimiza_hiper(pipeline, X, y, grupos, nome_estudo, num_trials=100):
     estudo = optuna.create_study(
         direction="minimize",
         study_name=nome_estudo,
-        storage=f"sqlite:///optuna_files3/{nome_estudo}.db",
+        storage=f"sqlite:///optuna_files3/{nome_estudo}_rev.db",
         load_if_exists=True,
         sampler=TPESampler(),
         pruner=PODADOR,
@@ -369,7 +369,7 @@ def instancia_pipe_elasticnet(trial):
     parametros = {
         # espaço de busca
         "alpha": trial.suggest_float("alpha", 1e-5, 100, log=True),
-        "l1_ratio": trial.suggest_float("l1_ratio", 0, 1),
+        "l1_ratio": trial.suggest_float("l1_ratio", 0.01    , 1),
         # argumento fixo
         "max_iter": 10_000
     }
@@ -377,30 +377,26 @@ def instancia_pipe_elasticnet(trial):
     return instancia_pipeline(trial, ElasticNet, parametros)
 
 def instancia_pipe_svr(trial):
-
-  parametros = {
-    # espaço de busca
-    'C': trial.suggest_float('C', 1e-1, 1e3, log=True),
-    "epsilon": trial.suggest_float('epsilon', 1e-3, 1.0, log=True),
-    "gamma": trial.suggest_float('gamma', 1e-4, 1.0, log=True),
-    # arg fixo
-    'kernel': 'rbf'
-  }
-
-  return instancia_pipeline(trial, SVR, parametros)
+    parametros = {
+        'C': trial.suggest_float('C', 1e-1, 1e3, log=True),
+        'epsilon': trial.suggest_float('epsilon', 1e-4, 0.2, log=True),
+        'gamma': trial.suggest_float('gamma', 1e-5, 0.5, log=True),
+        'kernel': 'rbf'
+    }
+    return instancia_pipeline(trial, SVR, parametros)
 
 def instancia_pipe_krr(trial):
 
   parametros = {
     # espaço de busca
-    'alpha': trial.suggest_float('alpha', 1e-4, 1.0, log=True),
-    "gamma": trial.suggest_float('gamma', 1e-4, 1.0, log=True),
+    'alpha': trial.suggest_float('alpha', 1e-8, 1.0, log=True), 
+    "gamma": trial.suggest_float('gamma', 1e-5, 0.1, log=True),
     "kernel": trial.suggest_categorical('kernel', ['rbf', 'laplacian', 'linear', 'polynomial']),    
   }
 
     # caso kernel seja polinomial, decide o grau do polinomio
   if parametros['kernel'] == 'polynomial':
-      parametros['degree'] = trial.suggest_int('degree', 2, 4)
+      parametros['degree'] = trial.suggest_int('degree', 2, 3)
   
   return instancia_pipeline(trial, KernelRidge, parametros)
 

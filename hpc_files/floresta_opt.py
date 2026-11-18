@@ -351,11 +351,11 @@ def instancia_pipe_floresta_aleatoria(trial):
 
     parametros = {
         # espaço de busca
-        "n_estimators": trial.suggest_int("num_arvores", 5, 300, log=True),
-        "criterion": trial.suggest_categorical("critério", ["squared_error", "absolute_error", "poisson"]),
+        "n_estimators": trial.suggest_int("num_arvores", 100, 500),
+        "criterion": trial.suggest_categorical("critério", ["squared_error", "poisson"]),
         "min_samples_split": trial.suggest_int("min_exemplos_split", 2, 20),
         "min_samples_leaf": trial.suggest_int("min_exemplos_folha", 1, 20),
-        "max_features": trial.suggest_float("num_max_atributos", 0.1, 1),
+        "max_features": trial.suggest_float("num_max_atributos", 0.1, 1, log=True),
         # argumentos fixos
         "n_jobs": -1,
         "bootstrap": True,
