@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Test ground directory
+test
+
+# Files to be tested via hpc
+hpc
