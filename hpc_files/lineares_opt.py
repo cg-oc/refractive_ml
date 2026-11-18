@@ -1,11 +1,9 @@
 from matminer.featurizers.structure import DensityFeatures
 from matminer.featurizers.composition import ElementProperty
 from sklearn.linear_model import ElasticNet, Ridge, Lasso
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.decomposition import PCA
-from sklearn.feature_selection import VarianceThreshold
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.pipeline import make_pipeline
@@ -419,7 +417,7 @@ pipe_modelos = (
    instancia_pipe_ridge
 )
 
-nome_modelos = ("lasso", "elasticnet", "svr", "krr", "ridge")
+nome_modelos = ("ridge", "lasso", "elasticnet", "svr", "krr")
 
 estudos = {nome: 0 for nome in nome_modelos}
 NUM_TRIALS = 1_000

@@ -1,13 +1,9 @@
 from matminer.featurizers.structure import DensityFeatures
 from matminer.featurizers.composition import ElementProperty
-from sklearn.linear_model import ElasticNet, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.decomposition import PCA
-from sklearn.feature_selection import VarianceThreshold
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
-from sklearn.kernel_ridge import KernelRidge
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import GroupShuffleSplit, GroupKFold
@@ -351,10 +347,10 @@ def instancia_pipe_floresta_aleatoria(trial):
 
     parametros = {
         # espaço de busca
-        "n_estimators": trial.suggest_int("num_arvores", 100, 500),
+        "n_estimators": trial.suggest_int("num_arvores", 100, 400),
         "criterion": trial.suggest_categorical("critério", ["squared_error", "poisson"]),
         "min_samples_split": trial.suggest_int("min_exemplos_split", 2, 20),
-        "min_samples_leaf": trial.suggest_int("min_exemplos_folha", 1, 20),
+        "min_samples_leaf": trial.suggest_int("min_exemplos_folha", 2, 20),
         "max_features": trial.suggest_float("num_max_atributos", 0.1, 1, log=True),
         # argumentos fixos
         "n_jobs": -1,
